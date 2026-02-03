@@ -59,6 +59,7 @@ public partial class TerrainMesh : MeshInstance3D
 
 		float halfX = GridSize.X * 0.5f;
 		float halfZ = GridSize.Y * 0.5f;
+		float maxRadius = Mathf.Min(halfX, halfZ);
 		float maxEdgeRadius = Mathf.Max(0.0001f, EdgeFlattenRadius);
 
 		for (int i = 0; i < vertices.Length; i++)
@@ -66,11 +67,11 @@ public partial class TerrainMesh : MeshInstance3D
 			Vector3 v = vertices[i];
 			float height = noise.GetNoise2D(v.X, v.Z) * Variation;
 
-			float distToEdgeX = halfX - Mathf.Abs(v.X);
-			float distToEdgeZ = halfZ - Mathf.Abs(v.Z);
-			float distToEdge = Mathf.Min(distToEdgeX, distToEdgeZ);
+			// Calculate distance from center for circular falloff
+			float distFromCenter = Mathf.Sqrt(v.X * v.X + v.Z * v.Z);
+			float distFromEdge = maxRadius - distFromCenter;
 
-			float t = Mathf.Clamp(distToEdge / maxEdgeRadius, 0f, 1f);
+			float t = Mathf.Clamp(distFromEdge / maxEdgeRadius, 0f, 1f);
 			float edgeFactor = Mathf.Pow(t, EdgeFlattenPower);
 
 			v.Y = Mathf.Lerp(EdgeFlattenTargetHeight, height, edgeFactor);
